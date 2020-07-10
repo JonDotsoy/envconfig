@@ -1,0 +1,27 @@
+{
+  "name": "@jondotsoy/envconfig",
+  "version": "1.0.1-0",
+  "description": "Helper to load environment with context and formatter.",
+  "main": "index.js",
+  "scripts": {},
+  "author": "Jonathan Delgado <hi@jon.soy> (https://jon.soy)",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/chai": "^4.2.11",
+    "@types/mocha": "^7.0.2",
+    "@types/node": "^14.0.20",
+    "chai": "^4.2.0",
+    "mocha": "^8.0.1",
+    "nodemon": "^2.0.4",
+    "typescript": "^3.9.6"
+  },
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JonDotsoy/envconfig.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JonDotsoy/envconfig/issues"
+  },
+  "homepage": "https://github.com/JonDotsoy/envconfig#readme"
+}
