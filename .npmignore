@@ -1,0 +1,6 @@
+*.ts
+tsconfig.json
+*.tgz
+!*.d.ts
+*.spec.js
+*.spec.d.ts
