@@ -1,11 +1,14 @@
 {
   "name": "@jondotsoy/envconfig",
-  "version": "1.0.1-0",
+  "version": "0.1.0-beta.0",
   "description": "Helper to load environment with context and formatter.",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "test": "mocha -r ts-node/register test.spec.ts",
+    "prepare": "tsc"
+  },
   "author": "Jonathan Delgado <hi@jon.soy> (https://jon.soy)",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/chai": "^4.2.11",
     "@types/mocha": "^7.0.2",
@@ -13,6 +16,7 @@
     "chai": "^4.2.0",
     "mocha": "^8.0.1",
     "nodemon": "^2.0.4",
+    "ts-node": "^8.10.2",
     "typescript": "^3.9.6"
   },
   "dependencies": {},
