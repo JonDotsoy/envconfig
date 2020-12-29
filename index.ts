@@ -1,46 +1,47 @@
 
-const isBool = (v: any): v is string => {
-    return /^true|false$/i.test(v);
-}
+const isBoolStr = (v: any): v is string => /^true|false$/i.test(v)
+const isNumStr = (v: any): v is string => /^\d+(\.\d+)?$/.test(v)
+const isBigIntStr = (v: any): v is string => /^\d+n$/.test(v)
 
-export type Types = 'number' | 'boolean' | 'string' | ((val: any) => any);
+export type Types = 'number' | 'boolean' | 'string' | ((v: any) => any);
 
-interface IEnvconfig {
-    getConfig(envPath: string, options: { required: true; type: 'number'; }): number;
-    getConfig(envPath: string, options: { required: true; type: 'boolean'; }): boolean;
-    getConfig<T>(envPath: string, options: { required: true; type: (val: any) => T; }): T;
-    getConfig(envPath: string, options: { required?: boolean; type: 'number'; }): number | undefined;
-    getConfig(envPath: string, options: { required?: boolean; type: 'boolean'; }): boolean | undefined;
-    getConfig<T>(envPath: string, options: { required?: boolean; type: (val: any) => T; }): T | undefined;
-    getConfig(envPath: string, options: { required: true; type?: Types; }): string;
-    getConfig(envPath: string, options?: { required?: boolean; type?: Types; }): string | undefined;
-}
-
-interface EnvconfigOptions {
-    env?: any;
+interface EnvconfigOptions<T extends { [k: string]: string } = any> {
+    env?: T;
     prefix?: string;
     sufix?: string;
 }
 
-interface EnvconfigGetConfigOptions {
-    required?: boolean;
-    type?: Types;
+interface EnvconfigGetConfigOptions<T extends Types, E extends boolean> {
+    required?: E;
+    type?: T;
 }
 
-export class Envconfig {
-    constructor(private options?: EnvconfigOptions) { }
+type R1<B extends Types> =
+    B extends 'string' ? string
+    : B extends 'number' ? number
+    : B extends 'boolean' ? boolean
+    : B extends (v: any) => infer R ? R
+    : never
+
+type R<T extends Types, E extends boolean> =
+    E extends true ? R1<T>
+    : E extends false ? R1<T> | undefined
+    : never
+
+export class Envconfig<P extends { [k: string]: string } = any> {
+    constructor(private options?: EnvconfigOptions<P>) { }
 
     readonly env = this.options?.env ?? process.env;
     readonly prefix = this.options?.prefix;
     readonly sufix = this.options?.sufix;
 
-    getConfig: IEnvconfig['getConfig'] = (envPath: string, options?: EnvconfigGetConfigOptions) => {
-        const required = options?.required ?? false;
+    getConfig<T extends Types = 'string', E extends boolean = false>(envPath: keyof P, options?: EnvconfigGetConfigOptions<T, E>): R<T, E> {
+        const required: boolean = options?.required ?? false;
         const type: Types = options?.type ?? 'string';
 
         const nextEnvPath = `${this.prefix ?? ''}${envPath}`;
 
-        const v = this.env[nextEnvPath] ?? this.env[`${nextEnvPath}${this.sufix ?? ''}`];
+        const v: any = this.env[nextEnvPath] ?? this.env[`${nextEnvPath}${this.sufix ?? ''}`];
 
         if (required && !v) {
             if (this.sufix) {
@@ -51,8 +52,10 @@ export class Envconfig {
         }
 
         switch (type) {
-            case 'number': return Number(v);
-            case 'boolean': return isBool(v) ? JSON.parse(v.toLowerCase()) : undefined;
+            case 'number': return isNumStr(v) ? Number(v) as any
+                : isBigIntStr(v) ? BigInt(v.slice(0, -1)) as any
+                    : undefined;
+            case 'boolean': return isBoolStr(v) ? JSON.parse(v.toLowerCase()) : undefined;
         }
 
         if (typeof type === 'function') return type(v);
@@ -61,8 +64,8 @@ export class Envconfig {
     }
 }
 
-export const envconfig = (options?: EnvconfigOptions): IEnvconfig['getConfig'] => {
-    const e = new Envconfig(options);
+export const envconfig = <T extends { [k: string]: string } = any>(options?: EnvconfigOptions<T>) => {
+    const e = new Envconfig<T>(options);
     return e.getConfig.bind(e);
 }
 

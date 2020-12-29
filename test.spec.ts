@@ -80,6 +80,22 @@ describe('Envconfig', () => {
         expect(e('ABA', { type: 'number', required: true })).to.be.eql(1234);
     });
 
+    it('expect transform result to number', () => {
+        process.env.ABA = "1234.1234223"
+
+        const e = envconfig();
+
+        expect(e('ABA', { type: 'number', required: true })).to.be.eql(1234.1234223);
+    });
+
+    it('expect transform result to number', () => {
+        process.env.ABA = "1234n"
+
+        const e = envconfig();
+
+        expect(e('ABA', { type: 'number', required: true })).to.be.eql(1234n);
+    });
+
     it('expect transform result to boolean', () => {
         process.env.ACA = "true"
         process.env.ACB = "false"
