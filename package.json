@@ -1,6 +1,6 @@
 {
   "name": "@jondotsoy/envconfig",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0",
   "description": "Helper to load environment with context and formatter.",
   "main": "index.js",
   "scripts": {
