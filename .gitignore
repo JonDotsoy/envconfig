@@ -191,3 +191,4 @@ $RECYCLE.BIN/
 *.d.ts
 *.js
 
+!jest.config.js

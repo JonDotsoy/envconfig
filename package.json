@@ -4,18 +4,20 @@
   "description": "Helper to load environment with context and formatter.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha -r ts-node/register test.spec.ts",
+    "test": "jest",
     "prepare": "tsc"
   },
   "author": "Jonathan Delgado <hi@jon.soy> (https://jon.soy)",
   "license": "MIT",
   "devDependencies": {
+    "@jest/types": "^26.6.2",
     "@types/chai": "^4.2.14",
     "@types/mocha": "^7.0.2",
     "@types/node": "^14.14.16",
     "chai": "^4.2.0",
-    "mocha": "^8.2.1",
+    "jest": "^26.6.3",
     "nodemon": "^2.0.6",
+    "ts-jest": "^26.4.4",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.7"
   },
