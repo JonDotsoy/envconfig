@@ -75,6 +75,18 @@ const port: number = e('PORT', 'number', true);
 > declare type prefix = string
 > ```
 
+Used to simplify the reading values that contain prefixes on all values required.
+
+```ts
+const e = envconfig({
+    env: { AWS_ACCESS_KEY_ID: 'a123', AWS_SECRET_ACCESS_KEY: 'abcdeaw12343****' },
+    prefix: 'AWS_',
+});
+
+const accessKeyId: string = e('ACCESS_KEY_ID', 'string', true);
+const secretAccessKey: string = e('SECRET_ACCESS_KEY', 'string', true);
+```
+
 ### sufix
 
 - Optional
