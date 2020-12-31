@@ -1,12 +1,6 @@
-import { types } from "util"
-
 const isBooleanStr = (v: any): v is string => /^true|false$/i.test(v)
 const isNumberStr = (v: any): v is string => /^\d+(\.\d+)?$/.test(v)
 const isBigIntStr = (v: any): v is string => /^\d+n$/.test(v)
-const isFn = (v: any): v is ((v: any) => any) => typeof v === 'function'
-const isString = (v: any): v is string => typeof v === 'string'
-const isNumber = (v: any): v is number => typeof v === 'number'
-const isBoolean = (v: any): v is boolean => typeof v === 'boolean'
 
 export type Types<T = any> = 'number' | 'boolean' | 'string' | 'bigint' | ((v: any) => T);
 

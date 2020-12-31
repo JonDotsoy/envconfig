@@ -1,6 +1,6 @@
 # envconfig
 
-Helper to load environment values with formatter 😉.
+Envconfig is a helper zero-dependency module to load environment values with formatter 😉.
 
 **Features:**
 
@@ -24,11 +24,52 @@ Helper to load environment values with formatter 😉.
 
 ## How to use
 
-Install dependency `@jondotsoy/envconfig` from npm 
+Install dependency `@jondotsoy/envconfig`
 
 ```shell
+# With npm
 $ npm i @jondotsoy/envconfig
 ```
+
+## Usage
+
+Require and configure envconfig.
+
+```ts
+// my_configs.ts
+import envconfig from '@jondotsoy/envconfig';
+
+const e = envconfig();
+```
+
+Use your instance `e` in your code. For example, using PORT env if exists or assign a default value.
+
+```ts
+const port: number = e('PORT', 'number') ?? 3000;
+```
+
+## Options
+
+### env
+
+- Type:
+> ```ts
+> { [k: string]: string }
+> ```
+- Default: `process.env`
+
+Specify origins data, the method `e()` is using this value to read and transform values.
+
+```ts
+const e = envconfig({ env: { PORT: '6000' } });
+
+const port: number = e('PORT', 'number', true);
+```
+
+
+
+---
+
 
 Make a file with the config schema needy. —Usually this files is named `configs.ts` or `configs.js`—
 
