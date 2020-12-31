@@ -97,6 +97,8 @@ const secretAccessKey: string = e('SECRET_ACCESS_KEY', 'string', true);
 
 Used to simplify the reading the values that can have a suffix. It has preferer the key with the suffix if not exists the key with the suffix this to find a key without the suffix.
 
+**Demo 1**
+
 ```ts
 const e = envconfig({
     env: { API_KEY: 'abc123', API_KEY_STAGING: 'def456' },
@@ -106,4 +108,17 @@ const e = envconfig({
 const apiKey: string = e('API_KEY', 'string', true);
 
 assert(apiKey).to.be.equal('def456');
+```
+
+**Demo 2**
+
+```ts
+const e = envconfig({
+    env: { API_KEY: 'abc123', API_KEY_PRODUCTION: 'def456' },
+    sufix: '_STAGING',
+});
+
+const apiKey: string = e('API_KEY', 'string', true);
+
+assert(apiKey).to.be.equal('abc123');
 ```
