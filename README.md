@@ -1,6 +1,6 @@
 # envconfig
 
-Helper to load environment values with formatter 😉.
+Envconfig is a helper zero-dependency module to load environment values with formatter 😉.
 
 **Features:**
 
@@ -24,81 +24,101 @@ Helper to load environment values with formatter 😉.
 
 ## How to use
 
-Install dependency `@jondotsoy/envconfig` from npm 
+Install dependency `@jondotsoy/envconfig`
 
 ```shell
+# With npm
 $ npm i @jondotsoy/envconfig
 ```
 
-Make a file with the config schema needy. —Usually this files is named `configs.ts` or `configs.js`—
+## Usage
+
+Require and configure envconfig.
 
 ```ts
 // my_configs.ts
 import envconfig from '@jondotsoy/envconfig';
 
 const e = envconfig();
-
-export = {
-    port: e('PORT', 'number') ?? 3000, // number
-    awsEnvironments: ['ZONE1', 'ZONE2', 'ZONE3']
-        .map(zoneName => {
-            const e = envconfig({
-                env: process.env,
-                prefix: 'AWS_',
-                sufix: `_${zoneName}`,
-            });
-
-            return {
-                region: e('REGION') ?? 'us-west-1',
-                accessKeyId: e('ACCESS_KEY_ID', { required: true }),
-                secretAccessKey: e('SECRET_ACCESS_KEY', { required: true }),
-            };
-        }),
-};
 ```
 
-Before to start the project need define the variable on environment.
-
-> It is recommended to use the [dotenv](https://www.npmjs.com/package/dotenv) to set the environments.
-
-*_Example Environment_*
-
-```shell
-PORT='3421'
-AWS_REGION='us-west-1'
-AWS_REGION_ZONE3='us-west-1'
-AWS_ACCESS_KEY_ID_ZONE1='AKIDZone1'
-AWS_SECRET_ACCESS_KEY_ZONE1='SECRETZone1'
-AWS_ACCESS_KEY_ID_ZONE2='AKIDZone2'
-AWS_SECRET_ACCESS_KEY_ZONE2='SECRETZone2'
-AWS_ACCESS_KEY_ID_ZONE3='AKIDZone3'
-AWS_SECRET_ACCESS_KEY_ZONE3='SECRETZone3'
-```
-
-*_Load config file_*
-
-if is above is correct, when you require the config file this will be the result.
+Use your instance `e` in your code. For example, using PORT env if exists or assign a default value.
 
 ```ts
-{
-    port: 3421,
-    awsEnvironments: [
-        {
-            region: 'us-west-1',
-            accessKeyId: 'AKIDZone1',
-            secretAccessKey: 'SECRETZone1'
-        },
-        {
-            region: 'us-west-1',
-            accessKeyId: 'AKIDZone2',
-            secretAccessKey: 'SECRETZone2'
-        },
-        {
-            region: 'us-west-2',
-            accessKeyId: 'AKIDZone3',
-            secretAccessKey: 'SECRETZone3'
-        }
-    ]
-}
+const port: number = e('PORT', 'number') ?? 3000;
 ```
 
+## Options `envconfig([{ env?, prefix?, sufix? }])`
+
+### env
+
+- Optional
+- Type:
+> ```ts
+> declare type env = { [k: string]: string }
+> ```
+- Default: `process.env`
+
+Specify origins data, the method `e()` is using this value to read and transform values.
+
+```ts
+const e = envconfig({ env: { PORT: '6000' } });
+
+const port: number = e('PORT', 'number', true);
+```
+
+### prefix
+
+- Optional
+- Type:
+> ```ts
+> declare type prefix = string
+> ```
+
+Used to simplify the reading values that contain prefixes on all values required. Its util to complex strategies.
+
+```ts
+const e = envconfig({
+    env: { AWS_ACCESS_KEY_ID: 'a123', AWS_SECRET_ACCESS_KEY: 'abcdeaw12343****' },
+    prefix: 'AWS_',
+});
+
+const accessKeyId: string = e('ACCESS_KEY_ID', 'string', true);
+const secretAccessKey: string = e('SECRET_ACCESS_KEY', 'string', true);
+```
+
+### sufix
+
+- Optional
+- Type:
+> ```ts
+> declare type sufix = string
+> ```
+
+Used to simplify the reading the values that can have a suffix. It has preferer the key with the suffix if not exists the key with the suffix this to find a key without the suffix.
+
+**Demo 1**
+
+```ts
+const e = envconfig({
+    env: { API_KEY: 'abc123', API_KEY_STAGING: 'def456' },
+    sufix: '_STAGING',
+});
+
+const apiKey: string = e('API_KEY', 'string', true);
+
+assert(apiKey).to.be.equal('def456');
+```
+
+**Demo 2**
+
+```ts
+const e = envconfig({
+    env: { API_KEY: 'abc123', API_KEY_PRODUCTION: 'def456' },
+    sufix: '_STAGING',
+});
+
+const apiKey: string = e('API_KEY', 'string', true);
+
+assert(apiKey).to.be.equal('abc123');
+```
