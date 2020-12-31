@@ -1,9 +1,14 @@
+import { types } from "util"
 
-const isBoolStr = (v: any): v is string => /^true|false$/i.test(v)
-const isNumStr = (v: any): v is string => /^\d+(\.\d+)?$/.test(v)
+const isBooleanStr = (v: any): v is string => /^true|false$/i.test(v)
+const isNumberStr = (v: any): v is string => /^\d+(\.\d+)?$/.test(v)
 const isBigIntStr = (v: any): v is string => /^\d+n$/.test(v)
+const isFn = (v: any): v is ((v: any) => any) => typeof v === 'function'
+const isString = (v: any): v is string => typeof v === 'string'
+const isNumber = (v: any): v is number => typeof v === 'number'
+const isBoolean = (v: any): v is boolean => typeof v === 'boolean'
 
-export type Types = 'number' | 'boolean' | 'string' | ((v: any) => any);
+export type Types<T = any> = 'number' | 'boolean' | 'string' | 'bigint' | ((v: any) => T);
 
 interface EnvconfigOptions<T extends { [k: string]: string } = any> {
     env?: T;
@@ -19,6 +24,7 @@ interface EnvconfigGetConfigOptions<T extends Types, E extends boolean> {
 type R1<B extends Types> =
     B extends 'string' ? string
     : B extends 'number' ? number
+    : B extends 'bigint' ? bigint
     : B extends 'boolean' ? boolean
     : B extends (v: any) => infer R ? R
     : never
@@ -28,6 +34,68 @@ type R<T extends Types, E extends boolean> =
     : E extends false ? R1<T> | undefined
     : never
 
+type Options<T extends Types = 'string', E extends boolean = false> =
+    | [(EnvconfigGetConfigOptions<T, E>)?]
+    | [T?, E?]
+
+const toNumber = (v: any) => isNumberStr(v)
+    ? Number(v)
+    : undefined;
+
+const toBigint = (v: any) => isBigIntStr(v)
+    ? BigInt(v.slice(0, -1))
+    : undefined;
+
+const toBoolean = (v: string) => isBooleanStr(v) ? JSON.parse(v.toLowerCase()) as boolean : undefined;
+
+const transf = (type: Types, v: string | undefined) => {
+    if (v === undefined) return undefined;
+    else if (typeof type === 'function') return type(v);
+    else if (type === 'string') return v;
+    else if (type === 'number') return toNumber(v);
+    else if (type === 'bigint') return toBigint(v);
+    else if (type === 'boolean') return toBoolean(v)
+}
+
+const isTypes = <T extends Types>(v: any): v is T => {
+    switch (v) {
+        case 'string':
+        case 'number':
+        case 'boolean':
+            return true
+    }
+    if (typeof v === 'function') return true;
+    return false
+}
+
+const isConfigBool = <E extends boolean>(v: any): v is E => typeof v === 'boolean';
+const isConfigObj = <T extends Types, E extends boolean>(v: any): v is EnvconfigGetConfigOptions<T, E> => typeof v === 'object';
+
+const parseOptions = <T extends Types = 'string', E extends boolean = false>(...opts: Options<T, E>) => {
+    type A = EnvconfigGetConfigOptions<T, E>
+
+    const resolveOpt = (a: EnvconfigGetConfigOptions<T, E>, v: T | E | A | undefined) => {
+        if (isConfigBool<E>(v)) {
+            a.required = v
+        }
+        if (isTypes<T>(v)) {
+            a.type = v
+        }
+        if (isConfigObj<T, E>(v)) {
+            return v
+        }
+        return a
+    }
+
+    let out: A = {}
+
+    for (const opt of opts) {
+        out = resolveOpt(out, opt)
+    }
+
+    return out;
+}
+
 export class Envconfig<P extends { [k: string]: string } = any> {
     constructor(private options?: EnvconfigOptions<P>) { }
 
@@ -35,30 +103,23 @@ export class Envconfig<P extends { [k: string]: string } = any> {
     readonly prefix = this.options?.prefix;
     readonly sufix = this.options?.sufix;
 
-    getConfig<T extends Types = 'string', E extends boolean = false>(envPath: keyof P, options?: EnvconfigGetConfigOptions<T, E>): R<T, E> {
-        const required: boolean = options?.required ?? false;
-        const type: Types = options?.type ?? 'string';
+    getConfig<T extends Types = 'string', E extends boolean = false>(envPath: string, ...args: Options<T, E>): R<T, E> {
+        const options = parseOptions(...args);
+
+        const required = options?.required ?? false;
+        const type = options?.type ?? 'string';
 
         const nextEnvPath = `${this.prefix ?? ''}${envPath}`;
 
-        const v: any = this.env[nextEnvPath] ?? this.env[`${nextEnvPath}${this.sufix ?? ''}`];
+        const v = transf(type, this.env[nextEnvPath] ?? this.env[`${nextEnvPath}${this.sufix ?? ''}`]);
 
-        if (required && !v) {
+        if (required && v === undefined) {
             if (this.sufix) {
                 throw new Error(`Cannot found config ${nextEnvPath}${this.sufix ?? ''} or ${nextEnvPath}`);
             } else {
                 throw new Error(`Cannot found config ${nextEnvPath}`);
             }
         }
-
-        switch (type) {
-            case 'number': return isNumStr(v) ? Number(v) as any
-                : isBigIntStr(v) ? BigInt(v.slice(0, -1)) as any
-                    : undefined;
-            case 'boolean': return isBoolStr(v) ? JSON.parse(v.toLowerCase()) : undefined;
-        }
-
-        if (typeof type === 'function') return type(v);
 
         return v;
     }
