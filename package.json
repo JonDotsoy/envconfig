@@ -1,7 +1,7 @@
 {
   "name": "@jondotsoy/envconfig",
-  "version": "1.0.0",
-  "description": "Helper to load environment with context and formatter.",
+  "version": "1.1.0",
+  "description": "helper to load environment values with formatter 😉.",
   "main": "index.js",
   "publishConfig": {
     "access": "public",
@@ -9,6 +9,7 @@
   },
   "scripts": {
     "test": "jest",
+    "test:watch": "jest --watch",
     "prepare": "tsc"
   },
   "author": "Jonathan Delgado <hi@jon.soy> (https://jon.soy)",

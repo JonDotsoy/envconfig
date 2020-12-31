@@ -1,12 +1,25 @@
-
-
 # envconfig
 
-Helper to load environment with context and formatter.
+Helper to load environment values with formatter 😉.
 
-- Load config from `process.env`
-- Format value
+**Features:**
+
+- Default load config from `process.env`
+- Formatter value using option *`[type]`*: `e('ENV', { type: Types }) => Types | undefined` or `e('ENV', Types) => Types | undefined`
+    - Formatters supported:
+        - `string` formatter (**Default**): Ex. `e('ENV') => string | undefined`
+        - `number` formatter: Ex. `e('ENV', { type: 'number' }) => number | undefined`
+        - `bigint` formatter: Ex. `e('ENV', { type: 'bitint' }) => bitint | undefined`
+        - `boolean` formatter: Ex. `e('ENV', { type: 'boolean' }) => boolean | undefined`
+        - Custom formatter: Ex. `e('ENV', { type: v => new Date(v) }) => Date | undefined`
 - Typescript support
+    - Samples:
+        -  `e('ENV', 'number') => number | undefined`
+        -  `e('ENV', v => new Date(v)) => Date | undefined`
+- Assert values
+    - Samples:
+        -  `e('ENV', { type: 'number', required: true }) => number`
+        -  `e('ENV', { type: v => new Date(v), required: true }) => Date`
 
 
 ## How to use
@@ -20,13 +33,13 @@ $ npm i @jondotsoy/envconfig
 Make a file with the config schema needy. —Usually this files is named `configs.ts` or `configs.js`—
 
 ```ts
-// configs.ts
+// my_configs.ts
 import envconfig from '@jondotsoy/envconfig';
 
-const e = envconfig({ env: process.env });
+const e = envconfig();
 
 export = {
-    port: e('PORT', { type: 'number', required: true }), // number
+    port: e('PORT', 'number') ?? 3000, // number
     awsEnvironments: ['ZONE1', 'ZONE2', 'ZONE3']
         .map(zoneName => {
             const e = envconfig({

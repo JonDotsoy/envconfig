@@ -93,7 +93,7 @@ describe('Envconfig', () => {
 
         const e = envconfig();
 
-        expect(e('ABA', { type: 'number', required: true })).to.be.eql(1234n);
+        expect(e('ABA', { type: 'bigint', required: true })).to.be.eql(1234n);
     });
 
     it('expect transform result to boolean', () => {
@@ -118,5 +118,31 @@ describe('Envconfig', () => {
         expect(e('ADA', { type: JSON.parse })).to.deep.equal({ a: "a" });
     });
 
+    it('syntax optional', () => {
+        const env = { a: '12', b: 'true', c: 'gt12', d: '2020-11-23' }
+
+        const e = envconfig({ env: env });
+
+        expect(e('e')).to.be.undefined;
+        expect(e('a')).to.be.equal('12');
+        expect(e('a', 'number')).to.be.equal(12);
+        expect(e('a', 'number')).to.be.equal(12);
+    });
+
+    it('demo', () => {
+        const env = {}
+
+        const e = envconfig({ env: env });
+
+        const port = e('PORT', 'number') ?? 3000
+    });
+
+    it('demo2', () => {
+        const env = {}
+
+        const e = envconfig({ env: env });
+
+        const port = e('PORT', v => new Date(v))
+    });
 });
 
