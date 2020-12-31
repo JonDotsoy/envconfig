@@ -54,7 +54,7 @@ const port: number = e('PORT', 'number') ?? 3000;
 
 - Type:
 > ```ts
-> type env = { [k: string]: string }
+> declare type env = { [k: string]: string }
 > ```
 - Default: `process.env`
 
