@@ -48,10 +48,11 @@ Use your instance `e` in your code. For example, using PORT env if exists or ass
 const port: number = e('PORT', 'number') ?? 3000;
 ```
 
-## Options
+## Options `envconfig([{ env?, prefix?, sufix? }])`
 
 ### env
 
+- Optional
 - Type:
 > ```ts
 > declare type env = { [k: string]: string }
@@ -66,7 +67,21 @@ const e = envconfig({ env: { PORT: '6000' } });
 const port: number = e('PORT', 'number', true);
 ```
 
+### prefix
 
+- Optional
+- Type:
+> ```ts
+> declare type prefix = string
+> ```
+
+### sufix
+
+- Optional
+- Type:
+> ```ts
+> declare type sufix = string
+> ```
 
 ---
 
