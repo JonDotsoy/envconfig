@@ -1,12 +1,19 @@
 {
   "name": "@jondotsoy/envconfig",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Envconfig is a helper zero-dependency module to load environment values with formatter 😉.",
   "main": "index.js",
   "publishConfig": {
     "access": "public",
     "tag": "latest"
   },
+  "keywords": [
+    "variables",
+    "config",
+    "settings",
+    "environment",
+    "env"
+  ],
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",

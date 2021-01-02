@@ -4,7 +4,7 @@ Envconfig is a helper zero-dependency module to load environment values with for
 
 **Features:**
 
-- Default load config from `process.env`
+- Default load config from [`process.env`](https://nodejs.org/dist/latest-v8.x/docs/api/process.html#process_process_env)
 - Formatter value using option *`[type]`*: `e('ENV', { type: Types }) => Types | undefined` or `e('ENV', Types) => Types | undefined`
     - Formatters supported:
         - `string` formatter (**Default**): Ex. `e('ENV') => string | undefined`
@@ -48,7 +48,7 @@ Use your instance `e` in your code. For example, using PORT env if exists or ass
 const port: number = e('PORT', 'number') ?? 3000;
 ```
 
-## Options `envconfig([{ env?, prefix?, sufix? }])`
+## Options `envconfig([{ env?, prefix?, sufix? }]): e(key: string)`
 
 ### env
 
@@ -122,3 +122,100 @@ const apiKey: string = e('API_KEY', 'string', true);
 
 assert(apiKey).to.be.equal('abc123');
 ```
+
+## Options `e(key: string[, { type?: Types, required?: boolean }])`
+
+- Other Syntax: `e(key: string[, type: Types[, required: boolean]])`
+
+### key
+
+- required
+- Type:
+```ts
+declare type key = string
+```
+
+It's a string that is a referrer to the key in the object env.
+
+```ts
+const key = 'PORT'
+const env = { PORT: '1234' }
+
+const e = envconfig({ env })
+
+const port = e(key) // '1234'
+```
+
+### type
+
+- Optional
+- Type:
+```ts
+declare type Types = 'number' | 'boolean' | 'string' | 'bigint' | ((v: string | undefined) => any);
+```
+
+This param is optional, a string or a function. This is used to indicate how is interpreted the value found. If the value found is undefined that value will not be interpreted.
+
+If is equal to `string`, the value found is transformed to [String](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String).
+
+```ts
+const port = e('PORT', 'string')
+
+assert.ok(typeof port === 'string')
+```
+
+If is equal to `number`, the value found is transformed to [Number](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number).
+
+```ts
+const port = e('PORT', 'number')
+
+assert.ok(typeof port === 'number')
+```
+
+If is equal to `boolean`, the value found is transformed to [Boolean](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Boolean).
+
+```ts
+const verbose = e('VERBOSE', 'boolean')
+
+assert.ok(typeof verbose === 'boolean')
+```
+
+If is equal to `bigint`, the value found is transformed to [BigInt](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt).
+
+```ts
+const memmax = e('MEMMAX', 'bigint')
+
+assert.ok(typeof memmax === 'bigint')
+```
+
+If is a function, it is used to transform value, only if is  not undefined the value found.
+
+**Demo 1**
+
+```ts
+const toDate = (v) => new Date(v)
+
+const openService = e('OPEN_SERVICE', toDate)
+
+assert.ok(openService instanceof Date)
+```
+
+**Demo 2**
+
+```ts
+const base64ToBuffer = (v) => Buffer.from(v, 'base64')
+
+const keySecret = e('KEY_SECRET', base64ToBuffer)
+
+assert.ok(keySecret instanceof Buffer)
+```
+
+### required
+
+- Optional
+- Type:
+```ts
+declare type required = boolean
+```
+
+if is equal to `true` the value found will have be not undefined else it throw a error.
