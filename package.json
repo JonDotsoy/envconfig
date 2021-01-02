@@ -7,6 +7,13 @@
     "access": "public",
     "tag": "latest"
   },
+  "keywords": [
+    "variables",
+    "config",
+    "settings",
+    "environment",
+    "env"
+  ],
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
