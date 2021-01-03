@@ -24,7 +24,8 @@
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
@@ -192,3 +193,4 @@ $RECYCLE.BIN/
 *.js
 
 !jest.config.js
+!.editorconfig
