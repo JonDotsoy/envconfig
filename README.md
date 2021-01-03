@@ -151,7 +151,7 @@ const port = e(key) // '1234'
 - Optional
 - Type:
 ```ts
-declare type Types = 'number' | 'boolean' | 'string' | 'bigint' | ((v: string | undefined) => any);
+declare type Types = 'number' | 'boolean' | 'string' | 'bigint' | ((v: string) => any);
 ```
 
 This param is optional, a string or a function. This is used to indicate how is interpreted the value found. If the value found is undefined that value will not be interpreted.
