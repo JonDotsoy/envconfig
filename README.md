@@ -22,6 +22,48 @@ Envconfig is a helper zero-dependency module to load environment values with for
         -  `e('ENV', { type: v => new Date(v), required: true }) => Date`
 
 
+**Example**
+
+```ts
+// config.ts
+import envconfig from '@jondotsoy/envconfig';
+
+const e = envconfig();
+
+export const config = {
+  port: e('PORT', 'number') ?? 3000,
+  mongouri: e('MONGODB', 'string', true),
+}
+```
+
+**Other Example**
+
+```ts
+// config.ts
+import envconfig from '@jondotsoy/envconfig';
+import ow from 'ow';
+
+const e = envconfig();
+
+const toRules = (env: any): { key: string, value: string }[] => {
+  const obj = JSON.parse(env);
+  
+  ow(obj, 'RULES', ow.array.ofType(ow.object.exactShape({
+    key: ow.string,
+    value: ow.string,
+  })));
+
+  return obj;
+}
+
+export const config = {
+  port: e('PORT', 'number') ?? 3000,
+  mongouri: e('MONGODB', 'string', true),
+  rules: e('RULES', toRules, true),
+}
+```
+
+
 ## How to use
 
 Install dependency `@jondotsoy/envconfig`
@@ -48,7 +90,7 @@ Use your instance `e` in your code. For example, using PORT env if exists or ass
 const port: number = e('PORT', 'number') ?? 3000;
 ```
 
-## Options `envconfig([{ env?, prefix?, sufix? }]): e(key: string)`
+## Options `envconfig([{ env?, prefix?, sufix?, optionalPrefix?, optionalSuffix? }]): e(key: string)`
 
 ### env
 
@@ -79,8 +121,8 @@ Used to simplify the reading values that contain prefixes on all values required
 
 ```ts
 const e = envconfig({
-    env: { AWS_ACCESS_KEY_ID: 'a123', AWS_SECRET_ACCESS_KEY: 'abcdeaw12343****' },
-    prefix: 'AWS_',
+  env: { AWS_ACCESS_KEY_ID: 'a123', AWS_SECRET_ACCESS_KEY: 'abcdeaw12343****' },
+  prefix: 'AWS_',
 });
 
 const accessKeyId: string = e('ACCESS_KEY_ID', 'string', true);
@@ -95,14 +137,36 @@ const secretAccessKey: string = e('SECRET_ACCESS_KEY', 'string', true);
 > declare type sufix = string
 > ```
 
+Used to simplify the reading values that contain sufixes on all values required. Its util to complex strategies.
+
+```ts
+const e = envconfig({
+  env: { KEY_STAGING: 'a123', SECRET_STAGING: 'abcdeaw12343****' },
+  sufix: '_STAGING',
+});
+
+const key: string = e('KEY', 'string', true);
+const secret: string = e('SECRET', 'string', true);
+```
+
+
+
+### optionalPrefix
+
+- Optional
+- Type:
+> ```ts
+> declare type optionalPrefix = string
+> ```
+
 Used to simplify the reading the values that can have a suffix. It has preferer the key with the suffix if not exists the key with the suffix this to find a key without the suffix.
 
 **Demo 1**
 
 ```ts
 const e = envconfig({
-    env: { API_KEY: 'abc123', API_KEY_STAGING: 'def456' },
-    sufix: '_STAGING',
+  env: { API_KEY: 'abc123', API_KEY_STAGING: 'def456' },
+  optionalSuffix: '_STAGING',
 });
 
 const apiKey: string = e('API_KEY', 'string', true);
@@ -116,6 +180,44 @@ assert(apiKey).to.be.equal('def456');
 const e = envconfig({
     env: { API_KEY: 'abc123', API_KEY_PRODUCTION: 'def456' },
     sufix: '_STAGING',
+});
+
+const apiKey: string = e('API_KEY', 'string', true);
+
+assert(apiKey).to.be.equal('abc123');
+```
+
+
+
+### optionalSuffix
+
+- Optional
+- Type:
+> ```ts
+> declare type sufix = string
+> ```
+
+Used to simplify the reading the values that can have a sufix. It has preferer the key with the sufix if not exists the key with the sufix this to find a key without the sufix.
+
+**Demo 1**
+
+```ts
+const e = envconfig({
+  env: { API_KEY: 'abc123', API_KEY_STAGING: 'def456' },
+  optionalSuffix: '_STAGING',
+});
+
+const apiKey: string = e('API_KEY', 'string', true);
+
+assert(apiKey).to.be.equal('def456');
+```
+
+**Demo 2**
+
+```ts
+const e = envconfig({
+    env: { API_KEY: 'abc123', API_KEY_PRODUCTION: 'def456' },
+    optionalSuffix: '_STAGING',
 });
 
 const apiKey: string = e('API_KEY', 'string', true);

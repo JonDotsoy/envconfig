@@ -5,17 +5,19 @@ const notIsUndefined = <T>(v: T): v is Exclude<T, undefined> => v !== undefined
 
 export type Types<T = any> = 'number' | 'boolean' | 'string' | 'bigint' | ((v: string) => T);
 
+type EnvconfigOptionsRequiredPrefixAndSufix = {
+  prefix?: string;
+  sufix?: string;
+}
+
+type EnvconfigOptionsOptionalPrefixAndSufix = {
+  optionalPrefix?: string;
+  optionalSufix?: string;
+}
+
 type EnvconfigOptions<T extends { [k: string]: string | undefined } = any> =
-  | {
-    env?: T;
-    prefix?: string;
-    sufix?: string;
-  }
-  | {
-    env?: T;
-    optionalPrefix?: string;
-    optionalSufix?: string;
-  }
+  | ({ env?: T; } & EnvconfigOptionsRequiredPrefixAndSufix)
+  | ({ env?: T; } & EnvconfigOptionsOptionalPrefixAndSufix)
 
 interface EnvconfigGetConfigOptions<T extends Types, E extends boolean> {
   required?: E;
@@ -103,7 +105,8 @@ export class Envconfig<P extends { [k: string]: string | undefined } = any> {
   readonly env = this.options?.env ?? process.env;
 
   findValue(envPath: string) {
-    const { optionalPrefix, optionalSufix, prefix, sufix } = this.options as any ?? {}
+    const options = this.options as EnvconfigOptionsRequiredPrefixAndSufix & EnvconfigOptionsOptionalPrefixAndSufix ?? {}
+    const { optionalPrefix, optionalSufix, prefix, sufix } = options
 
     const v = this.env;
 
