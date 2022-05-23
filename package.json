@@ -1,6 +1,6 @@
 {
   "name": "@jondotsoy/envconfig",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "description": "Envconfig is a helper zero-dependency module to load environment values with formatter 😉.",
   "main": "index.js",
   "publishConfig": {
