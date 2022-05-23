@@ -41,10 +41,10 @@ $ npm i @jondotsoy/envconfig
 
 ## Usage with Deno
 
-Import the module using the next url `https://unpkg.com/@jondotsoy/envconfig@latest/index.mts`
+Import the module using the next url `https://unpkg.com/@jondotsoy/envconfig@latest/index.ts`
 
 ```ts
-import envconfig from '[@jondotsoy/envconfig](https://unpkg.com/@jondotsoy/envconfig@latest/index.mts)';
+import envconfig from 'https://unpkg.com/@jondotsoy/envconfig@latest/index.ts';
 
 const e = envconfig({ env: Deno.env.toObject() });
 ```
