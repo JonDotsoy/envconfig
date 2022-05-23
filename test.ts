@@ -220,7 +220,6 @@ test('Envconfig', async (t) => {
   await test('conflix sufix and optionalsufix', () => {
     const env = { A_B: 'A_B', C: 'C' }
 
-    // @ts-ignore
     const e = envconfig({ env, sufix: '_B', optionalSufix: '_B' })
 
     assert.equal(e('A'), 'A_B')

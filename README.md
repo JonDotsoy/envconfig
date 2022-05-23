@@ -2,6 +2,13 @@
 
 Envconfig is a helper zero-dependency module to load environment values with formatter 😉.
 
+```ts
+const e = envconfig({ env: process.env })
+
+const port: number = e('PORT', 'number') ?? 3000;
+const ssl: boolean = e('SSL', 'boolean') ?? false;
+```
+
 **Features:**
 
 - Default load config from [`process.env`](https://nodejs.org/dist/latest-v8.x/docs/api/process.html#process_process_env)
