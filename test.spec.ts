@@ -1,10 +1,12 @@
 import { Envconfig, envconfig } from ".";
-import { expect } from 'chai';
-import { assert } from "console";
+import test from "node:test";
+import assert from "node:assert";
 
-describe('Envconfig', () => {
 
-  it.skip('(Typing) using as class', () => {
+test('Envconfig', async (t) => {
+  const test = t.test.bind(t);
+
+  await test('(Typing) using as class', { skip: true }, () => {
 
     const e = new Envconfig();
 
@@ -24,7 +26,7 @@ describe('Envconfig', () => {
 
   });
 
-  it.skip('(Typing) using as function', () => {
+  await test('(Typing) using as function', { skip: true }, () => {
 
     const e = envconfig();
 
@@ -44,60 +46,62 @@ describe('Envconfig', () => {
 
   });
 
-  it('load config', () => {
+  await test('load config', () => {
     process.env.ABC = "abc";
 
     const e = envconfig();
 
-    expect(e('ABC')).to.be.eq('abc');
+    assert.equal(e('ABC'), 'abc');
   });
 
-  it('expect load env with prefix', () => {
+  await test('expect load env with prefix', () => {
     process.env.DEF = "def";
     process.env.AAA_DEF = "abc";
 
     const e = envconfig({ prefix: 'AAA_' });
 
-    expect(e('DEF')).to.be.eq('abc');
+    assert.equal(e('DEF'), 'abc');
   });
 
-  it('expect load env undefined', () => {
+  await test('expect load env undefined', () => {
     const e = envconfig();
 
-    expect(e('AAA')).to.be.undefined;
+    assert.equal(e('AAA'), undefined);
   });
 
-  it('expect load env error', () => {
+  await test('expect load env error', () => {
     const e = envconfig();
 
-    expect(() => e('AAB', { required: true })).throw();
+    assert.throws(() => {
+      e('AAB', { required: true })
+    }, /required/);
   });
 
-  it('expect transform result to number', () => {
+  await test('expect transform result to number', () => {
     process.env.ABA = "1234"
 
     const e = envconfig();
 
-    expect(e('ABA', { type: 'number', required: true })).to.be.eql(1234);
+    assert.equal(e('ABA', { type: 'number', required: true }), 1234);
   });
 
-  it('expect transform result to number', () => {
+  await test('expect transform result to number', () => {
     process.env.ABA = "1234.1234223"
 
     const e = envconfig();
 
-    expect(e('ABA', { type: 'number', required: true })).to.be.eql(1234.1234223);
+    assert.equal(e('ABA', { type: 'number', required: true }), 1234.1234223);
   });
 
-  it('expect transform result to number', () => {
+  await test('expect transform result to number', () => {
     process.env.ABA = "1234n"
 
     const e = envconfig();
 
-    expect(e('ABA', { type: 'bigint', required: true })).to.be.eql(1234n);
+    assert.equal(e('ABA', { type: 'bigint', required: true }), 1234n);
   });
 
-  it('expect transform result to boolean', () => {
+  await test('expect transform result to boolean', () => {
     process.env.ACA = "true"
     process.env.ACB = "false"
     process.env.ACC = "True"
@@ -105,32 +109,32 @@ describe('Envconfig', () => {
 
     const e = envconfig();
 
-    expect(e('ACA', { type: 'boolean', required: true })).to.be.eql(true);
-    expect(e('ACB', { type: 'boolean', required: true })).to.be.eql(false);
-    expect(e('ACC', { type: 'boolean', required: true })).to.be.eql(true);
-    expect(e('ACD', { type: 'boolean', required: true })).to.be.eql(true);
+    assert.equal(e('ACA', { type: 'boolean', required: true }), true);
+    assert.equal(e('ACB', { type: 'boolean', required: true }), false);
+    assert.equal(e('ACC', { type: 'boolean', required: true }), true);
+    assert.equal(e('ACD', { type: 'boolean', required: true }), true);
   });
 
-  it('expect custom transform', () => {
+  await test('expect custom transform', () => {
     process.env.ADA = '{ "a": "a" }';
 
     const e = envconfig();
 
-    expect(e('ADA', { type: JSON.parse })).to.deep.equal({ a: "a" });
+    assert.deepEqual(e('ADA', { type: JSON.parse }), { a: "a" });
   });
 
-  it('syntax optional', () => {
+  await test('syntax optional', () => {
     const env = { a: '12', b: 'true', c: 'gt12', d: '2020-11-23' }
 
     const e = envconfig({ env: env });
 
-    expect(e('e')).to.be.undefined;
-    expect(e('a')).to.be.equal('12');
-    expect(e('a', 'number')).to.be.equal(12);
-    expect(e('a', 'number')).to.be.equal(12);
+    assert.equal(e('e'), undefined);
+    assert.equal(e('a'), '12');
+    assert.equal(e('a', 'number'), 12);
+    assert.equal(e('a', 'number'), 12);
   });
 
-  it('demo', () => {
+  await test('demo', () => {
     const env = {}
 
     const e = envconfig({ env: env });
@@ -138,7 +142,7 @@ describe('Envconfig', () => {
     const port = e('PORT', 'number') ?? 3000
   });
 
-  it('demo2', () => {
+  await test('demo2', () => {
     const env = {}
 
     const e = envconfig({ env: env });
@@ -146,81 +150,81 @@ describe('Envconfig', () => {
     const port = e('PORT', v => new Date(v))
   });
 
-  it('options prefix', () => {
+  await test('options prefix', () => {
     const env = { A_B: 'A_B' }
 
     const e = envconfig({ env: env, prefix: "A_" });
 
-    expect(e('B')).to.be.equal('A_B')
-    expect(e('C')).to.be.undefined
+    assert.equal(e('B'), 'A_B')
+    assert.equal(e('C'), undefined)
   })
 
-  it('options sufix', () => {
+  await test('options sufix', () => {
     const env = { A_B: 'A_B', C: 'C' }
 
     const e = envconfig({ env: env, sufix: "_B" });
 
-    expect(e('A')).to.be.equal('A_B')
-    expect(e('C')).to.be.undefined
+    assert.equal(e('A'), 'A_B')
+    assert.equal(e('C'), undefined)
   })
 
-  it('options prefix and sufix', () => {
+  await test('options prefix and sufix', () => {
     const env = { A_C_B: 'A_C_B', E: 'E', F_B: 'F_B' }
 
     const e = envconfig({ env: env, prefix: "A_", sufix: '_B' });
 
-    expect(e('C')).to.be.equal('A_C_B')
-    expect(e('E')).to.be.undefined
-    expect(e('F')).to.be.undefined
+    assert.equal(e('C'), 'A_C_B')
+    assert.equal(e('E'), undefined)
+    assert.equal(e('F'), undefined)
   })
 
-  it('options optional prefix', () => {
+  await test('options optional prefix', () => {
     const env = { A_B: 'A_B', C: 'C' }
 
     const e = envconfig({ env: env, optionalPrefix: "A_" });
 
-    expect(e('B')).to.be.equal('A_B')
-    expect(e('C')).to.be.equal('C')
+    assert.equal(e('B'), 'A_B')
+    assert.equal(e('C'), 'C')
   })
 
-  it('options optional sufix', () => {
+  await test('options optional sufix', () => {
     const env = { A_B: 'A_B', C: 'C' }
 
     const e = envconfig({ env: env, optionalSufix: "_B" });
 
-    expect(e('A')).to.be.equal('A_B')
-    expect(e('C')).to.be.equal('C')
+    assert.equal(e('A'), 'A_B')
+    assert.equal(e('C'), 'C')
   })
 
-  it('options optional prefix and sufix', () => {
+  await test('options optional prefix and sufix', () => {
     const env = { A_B_C: 'A_B_C', D: 'D', A_E: 'A_E', F_C: 'F_C' }
 
     const e = envconfig({ env: env, optionalPrefix: 'A_', optionalSufix: "_C" });
 
-    expect(e('B')).to.be.equal('A_B_C')
-    expect(e('D')).to.be.equal('D')
-    expect(e('E')).to.be.equal('A_E')
-    expect(e('F')).to.be.equal('F_C')
+    assert.equal(e('B'), 'A_B_C')
+    assert.equal(e('D'), 'D')
+    assert.equal(e('E'), 'A_E')
+    assert.equal(e('F'), 'F_C')
   })
 
-  it('conflix prefix and optionalprefix', () => {
+  await test('conflix prefix and optionalprefix', () => {
     const env = { A_B: 'A_B', C: 'C' }
 
     // @ts-ignore
     const e = envconfig({ env, prefix: 'A_', optionalPrefix: 'A_' })
 
-    expect(e('B')).to.be.equal('A_B')
-    expect(e('C')).to.be.undefined
+    assert.equal(e('B'), 'A_B')
+    assert.equal(e('C'), undefined)
   })
 
-  it('conflix sufix and optionalsufix', () => {
+  await test('conflix sufix and optionalsufix', () => {
     const env = { A_B: 'A_B', C: 'C' }
 
     // @ts-ignore
     const e = envconfig({ env, sufix: '_B', optionalSufix: '_B' })
 
-    expect(e('A')).to.be.equal('A_B')
-    expect(e('C')).to.be.undefined
+    assert.equal(e('A'), 'A_B')
+    assert.equal(e('C'), undefined)
   })
 });
 
