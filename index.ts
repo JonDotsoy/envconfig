@@ -9,12 +9,12 @@ type EnvconfigOptions<T extends { [k: string]: string | undefined } = any> =
   | {
     env?: T;
     prefix?: string;
-    sufix?: string;
+    suffix?: string;
   }
   | {
     env?: T;
     optionalPrefix?: string;
-    optionalSufix?: string;
+    optionalSuffix?: string;
   }
 
 interface EnvconfigGetConfigOptions<T extends Types, E extends boolean> {
