@@ -1,10 +1,12 @@
 *.ts
 tsconfig.json
 *.tgz
-!*.d.ts
+!*.d.mts
 *.spec.js
 *.spec.d.ts
 e().png
 .github
 jest.config.js
 .editorconfig
+rollup.config.mjs
+test.*

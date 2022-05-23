@@ -1,7 +1,7 @@
 const isBooleanStr = (v: any): v is string => /^true|false$/i.test(v)
 const isNumberStr = (v: any): v is string => /^\d+(\.\d+)?$/.test(v)
 const isBigIntStr = (v: any): v is string => /^\d+n$/.test(v)
-const notIsUndefined = <T>(v: T): v is Exclude<T, undefined> => v !== undefined
+const notIsUndefined = <T,>(v: T): v is Exclude<T, undefined> => v !== undefined
 
 export type Types<T = any> = 'number' | 'boolean' | 'string' | 'bigint' | ((v: string) => T);
 
@@ -49,7 +49,7 @@ const toBigint = (v: any) => isBigIntStr(v)
 
 const toBoolean = (v: string) => isBooleanStr(v) ? JSON.parse(v.toLowerCase()) as boolean : undefined;
 
-const transf = <T>(type: Types<T>, v: string | undefined) => {
+const transf = <T,>(type: Types<T>, v: string | undefined) => {
   if (v === undefined) return undefined;
   else if (typeof type === 'function') return type(v);
   else if (type === 'string') return v;

@@ -1,4 +1,4 @@
-import { Envconfig, envconfig } from ".";
+import { Envconfig, envconfig } from "./index.mjs";
 import test from "node:test";
 import assert from "node:assert";
 

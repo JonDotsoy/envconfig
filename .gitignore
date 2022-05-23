@@ -189,9 +189,12 @@ $RECYCLE.BIN/
 !.npmignore
 !.gitignore
 *.tgz
-*.d.ts
+*.d.mts
+*.mjs
 *.js
+*.mjs.map
 
 !jest.config.js
 !.editorconfig
 !env.d.ts
+!rollup.config.mjs
