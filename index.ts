@@ -97,10 +97,14 @@ const parseOptions = <T extends Types = 'string', E extends boolean = false>(...
   return out;
 }
 
-export class Envconfig<P extends { [k: string]: string | undefined } = any> {
-  constructor(private options?: EnvconfigOptions<P>) { }
+const globalThisProcessEnv = (v?: Record<string, any>) => v?.process?.env
 
-  readonly env = this.options?.env ?? globalThis.process?.env;
+export class Envconfig<P extends { [k: string]: string | undefined } = any> {
+  constructor(private options?: EnvconfigOptions<P>) {
+    this.env = this.options?.env ?? globalThisProcessEnv(globalThis)
+  }
+
+  readonly env: Record<string, string | undefined>;
 
   findValue(envPath: string) {
     const { optionalPrefix, optionalSufix, prefix, sufix } = this.options as any ?? {}
