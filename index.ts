@@ -100,7 +100,7 @@ const parseOptions = <T extends Types = 'string', E extends boolean = false>(...
 export class Envconfig<P extends { [k: string]: string | undefined } = any> {
   constructor(private options?: EnvconfigOptions<P>) { }
 
-  readonly env = this.options?.env ?? process.env;
+  readonly env = this.options?.env ?? globalThis.process?.env;
 
   findValue(envPath: string) {
     const { optionalPrefix, optionalSufix, prefix, sufix } = this.options as any ?? {}
