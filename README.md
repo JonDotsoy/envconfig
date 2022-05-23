@@ -11,6 +11,7 @@ const ssl: boolean = e('SSL', 'boolean') ?? false;
 
 **Features:**
 
+- Support to Deno
 - Default load config from [`process.env`](https://nodejs.org/dist/latest-v8.x/docs/api/process.html#process_process_env)
 - Formatter value using option *`[type]`*: `e('ENV', { type: Types }) => Types | undefined` or `e('ENV', Types) => Types | undefined`
     - Formatters supported:
@@ -37,6 +38,17 @@ Install dependency `@jondotsoy/envconfig`
 # With npm
 $ npm i @jondotsoy/envconfig
 ```
+
+## Usage with Deno
+
+Import the module using the next url `https://unpkg.com/@jondotsoy/envconfig@latest/index.mts`
+
+```ts
+import envconfig from '[@jondotsoy/envconfig](https://unpkg.com/@jondotsoy/envconfig@latest/index.mts)';
+
+const e = envconfig({ env: Deno.env.toObject() });
+```
+
 
 ## Usage
 

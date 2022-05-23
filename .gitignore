@@ -189,10 +189,10 @@ $RECYCLE.BIN/
 !.npmignore
 !.gitignore
 *.tgz
-*.d.mts
+*.d.ts
 *.mjs
 *.js
-*.mjs.map
+*.js.map
 
 !jest.config.js
 !.editorconfig

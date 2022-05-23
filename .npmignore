@@ -10,3 +10,4 @@ jest.config.js
 .editorconfig
 rollup.config.mjs
 test.*
+!index.ts
