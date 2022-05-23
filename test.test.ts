@@ -74,7 +74,7 @@ test('Envconfig', async (t) => {
 
     assert.throws(() => {
       e('AAB', { required: true })
-    }, /required/);
+    }, /Error: Cannot found config AAB/);
   });
 
   await test('expect transform result to number', () => {
