@@ -161,7 +161,9 @@ test('Envconfig', async (t) => {
 
     const e = envconfig({ env: env });
 
-    const port = e('PORT', v => new Date(v))
+    const port = e('PORT', Number)
+
+    assert.equal(port, undefined)
   });
 
   await test('options prefix', () => {
@@ -239,5 +241,17 @@ test('Envconfig', async (t) => {
     assert.equal(e('A'), 'A_B')
     assert.equal(e('C'), undefined)
   })
+
+  await test('should use a date transform type', () => {
+    const env = {
+      D: '2020-11-23'
+    }
+
+    const e = envconfig({ env })
+
+    const va = e('D', Date);
+    const isDate = va instanceof Date;
+    assert.equal(isDate, true, `should be a date but is ${inspect(va, { customInspect: false })}`);
+  });
 });
 

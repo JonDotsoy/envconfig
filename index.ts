@@ -2,6 +2,7 @@ import { inspect } from "util"
 
 const isRecord = (v: unknown): v is Record<string | symbol | number, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isFunction = (v: unknown): v is ((...args: unknown[]) => unknown) => typeof v === 'function'
+const isConstructor = (v: unknown): v is new (...args: unknown[]) => unknown => isFunction(v) && isRecord(v.prototype) && v.prototype.constructor === v
 const isString = (v: unknown): v is string => typeof v === 'string'
 const isBoolean = (v: unknown): v is boolean => typeof v === 'boolean'
 const withProp = <T extends string | symbol | number,>(value: Record<string | symbol | number, unknown>, key: T): value is Record<T, unknown> => key in value
@@ -9,12 +10,23 @@ const withProp = <T extends string | symbol | number,>(value: Record<string | sy
 
 export class TransformTypeError extends SyntaxError { }
 
+type TypesList = | 'string' |
+  typeof String |
+  'number' |
+  typeof Number |
+  'boolean' |
+  typeof Boolean |
+  'bigint' |
+  typeof BigInt
 
-export type TransformTypeFn<T,> = ((v: string) => T);
-export type TransformType<T,> = string | ((v: string) => T);
+
+export type TransformTypeFunction<T,> = (v: string) => T;
+export type TransformTypeConstructor<T,> = { new(...args: any): T }
+export type TransformType<T,> = string | TransformTypeConstructor<T> | TransformTypeFunction<T>;
 
 const NumberTransformType = (v: string): number => parseFloat(v)
 const BooleanTransformType = (v: string): boolean => /^on|1|true$/i.test(v)
+const DateTransformType = (v: string): Date => (console.log(v), new Date(v))
 const BigIntTransformType = (v: string): bigint => {
   const exp = /^(\d+)n?$/.exec(v);
   if (!exp) {
@@ -30,6 +42,7 @@ export const types = {
   number: NumberTransformType,
   boolean: BooleanTransformType,
   bigint: BigIntTransformType,
+  date: DateTransformType,
 }
 
 
@@ -57,7 +70,7 @@ const globalThisProcessEnv = () => {
 type GetConfigArgs<T, R extends boolean> = [args1?: TransformType<T> | { type?: TransformType<T>, required?: R }, args2?: R | { required: R }]
 type ResultGetConfig<T, R extends boolean> = R extends true ? T : T | undefined
 
-const aliasType: [any, TransformTypeFn<unknown>][] = [
+const aliasType: [TypesList, TransformTypeFunction<unknown>][] = [
   ['string', types.string],
   [String, types.string],
   ['number', types.number],
@@ -68,12 +81,17 @@ const aliasType: [any, TransformTypeFn<unknown>][] = [
   [BigInt, types.bigint],
 ];
 
-const resolveTransformType = (tt: TransformType<unknown>): TransformTypeFn<unknown> => {
-  if (isString(tt)) {
-    const aliasTypeFound = aliasType.find(([k]) => k === tt);
-    if (!aliasTypeFound) throw new Error(`Unknown transform type: ${tt}`);
+const resolveTransformType = (tt: TransformType<unknown>): TransformTypeFunction<unknown> => {
+  const aliasTypeFound = aliasType.find(([k]) => k === tt);
+  if (aliasTypeFound) {
     const [, t] = aliasTypeFound;
     return t;
+  }
+  if (isConstructor(tt)) {
+    return (v: string) => new tt(v)
+  }
+  if (!isFunction(tt)) {
+    throw new TransformTypeError(`Invalid type ${inspect(tt)}`)
   }
   return tt;
 }
@@ -118,43 +136,43 @@ export class Envconfig {
     let required: boolean = false;
     let transformType: TransformType<any> = function defaultTransformType(v: any) { return v };
 
-    if (isFunction(arg1)) {
-      transformType = resolveTransformType(arg1);
-      if (isRecord(arg2)) {
-        required = arg2.required;
-      }
-      if (isBoolean(arg2)) {
-        required = arg2;
-      }
-    } else if (isRecord(arg1)) {
-      if (arg1.type !== undefined) {
-        transformType = resolveTransformType(arg1.type);
-      }
-      if (isBoolean(arg1.required)) {
-        required = arg1.required;
-      } else if (isBoolean(arg2)) {
-        required = arg2;
-      } else if (isRecord(arg2)) {
-        required = arg2.required;
-      }
-    }
-
-    for (const [_key, value] of this.findValue(configPath)) {
-      if (value !== undefined) {
-        try {
-          return transformType(value);
-        } catch (ex) {
-          if (ex instanceof TransformTypeError) {
-            Error.captureStackTrace(ex, Envconfig.prototype.getConfig);
-            throw ex;
-          }
-          throw ex;
+    try {
+      if (isFunction(arg1)) {
+        transformType = resolveTransformType(arg1);
+        if (isRecord(arg2)) {
+          required = arg2.required;
+        }
+        if (isBoolean(arg2)) {
+          required = arg2;
+        }
+      } else if (isRecord(arg1)) {
+        if (arg1.type !== undefined) {
+          transformType = resolveTransformType(arg1.type);
+        }
+        if (isBoolean(arg1.required)) {
+          required = arg1.required;
+        } else if (isBoolean(arg2)) {
+          required = arg2;
+        } else if (isRecord(arg2)) {
+          required = arg2.required;
         }
       }
-    }
 
-    if (required) {
-      throw new Error(`Cannot found config ${configPath}`)
+      for (const [_key, value] of this.findValue(configPath)) {
+        if (value !== undefined) {
+          return transformType(value);
+        }
+      }
+
+      if (required) {
+        throw new TransformTypeError(`Cannot found config ${configPath}`)
+      }
+    } catch (ex) {
+      if (ex instanceof TransformTypeError) {
+        Error.captureStackTrace(ex, Envconfig.prototype.getConfig);
+        throw ex;
+      }
+      throw ex;
     }
 
     return undefined as any;
