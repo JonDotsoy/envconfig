@@ -123,7 +123,6 @@ export class Envconfig {
       yield [key, this.env[key]];
     }
   }
-
   getConfig<R extends boolean = false>(configPath: string, ...args: GetConfigArgs<'string', R>): ResultGetConfig<string, R>
   getConfig<R extends boolean = false>(configPath: string, ...args: GetConfigArgs<'bigint', R>): ResultGetConfig<bigint, R>
   getConfig<R extends boolean = false>(configPath: string, ...args: GetConfigArgs<'number', R>): ResultGetConfig<number, R>
@@ -181,5 +180,8 @@ export const envconfig = (options?: EnvconfigOptions) => {
   const e = new Envconfig(options);
   return e.getConfig.bind(e);
 }
+
+export const e = envconfig();
+export const required = { required: true } as const;
 
 export default envconfig;
