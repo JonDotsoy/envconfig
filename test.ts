@@ -1,29 +1,43 @@
 import { Envconfig, envconfig } from "./index.js";
 import test from "node:test";
 import assert from "node:assert";
+import { inspect } from "node:util";
 
 
 test('Envconfig', async (t) => {
   const test = t.test.bind(t);
 
-  await test('(Typing) using as class', { skip: true }, () => {
+  await test('(Typing) using as class', () => {
+    const env = {
+      A: '1',
+      B: 'true',
+    }
 
-    const e = new Envconfig();
+    const e = new Envconfig({ env });
 
-    const a = e.getConfig('A')
+    const va = e.getConfig('A');
+    const vb = e.getConfig('A', { required: true });
+    const vc = e.getConfig('A', { required: true, type: Number });
+    const vd = e.getConfig('A', { required: true, type: 'number' });
+    const ve = e.getConfig('A', { required: true, type: 'boolean' });
+    const vf = e.getConfig('A', { required: true, type: () => ''.split(/\,\s*/) });
+    const vg = e.getConfig('A', { required: true, type: () => new class E { } });
+    const vh = e.getConfig('A', { type: 'number' });
+    const vi = e.getConfig('A', { type: 'boolean' });
+    const vj = e.getConfig('A', { type: () => '1,2'.split(/\,\s*/) });
+    const vk = e.getConfig('A', { type: () => new class E { } });
 
-    const b = e.getConfig('A', { required: true });
-
-    const c = e.getConfig('A', { required: true, type: 'number' });
-    const d = e.getConfig('A', { required: true, type: 'boolean' });
-    const f = e.getConfig('A', { required: true, type: () => ''.split(/\,\s*/) });
-    const g = e.getConfig('A', { required: true, type: () => new class E { } });
-
-    const h = e.getConfig('A', { type: 'number' });
-    const i = e.getConfig('A', { type: 'boolean' });
-    const j = e.getConfig('A', { type: () => ''.split(/\,\s*/) });
-    const k = e.getConfig('A', { type: () => new class E { } });
-
+    assert.strictEqual(va, '1');
+    assert.strictEqual(vb, '1');
+    assert.strictEqual(vc, 1);
+    assert.strictEqual(vd, 1);
+    assert.strictEqual(ve, true);
+    assert.deepStrictEqual(vf, ['']);
+    assert.strictEqual(inspect(vg), 'E {}');
+    assert.strictEqual(vh, 1);
+    assert.strictEqual(vi, true);
+    assert.deepStrictEqual(vj, ['1', '2']);
+    assert.strictEqual(inspect(vk), 'E {}');
   });
 
   await test('(Typing) using as function', { skip: true }, () => {

@@ -1,152 +1,168 @@
-const isBooleanStr = (v: any): v is string => /^true|false$/i.test(v)
-const isNumberStr = (v: any): v is string => /^\d+(\.\d+)?$/.test(v)
-const isBigIntStr = (v: any): v is string => /^\d+n$/.test(v)
-const notIsUndefined = <T,>(v: T): v is Exclude<T, undefined> => v !== undefined
+import { inspect } from "util"
 
-export type Types<T = any> = 'number' | 'boolean' | 'string' | 'bigint' | ((v: string) => T);
+const isRecord = (v: unknown): v is Record<string | symbol | number, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
+const isFunction = (v: unknown): v is ((...args: unknown[]) => unknown) => typeof v === 'function'
+const isString = (v: unknown): v is string => typeof v === 'string'
+const isBoolean = (v: unknown): v is boolean => typeof v === 'boolean'
+const withProp = <T extends string | symbol | number,>(value: Record<string | symbol | number, unknown>, key: T): value is Record<T, unknown> => key in value
 
-type EnvconfigOptions<T extends { [k: string]: string | undefined } = any> =
-  | {
-    env?: T;
-    prefix?: string;
-    suffix?: string;
+
+export class TransformTypeError extends SyntaxError { }
+
+
+export type TransformTypeFn<T,> = ((v: string) => T);
+export type TransformType<T,> = string | ((v: string) => T);
+
+const NumberTransformType = (v: string): number => parseFloat(v)
+const BooleanTransformType = (v: string): boolean => /^on|1|true$/i.test(v)
+const BigIntTransformType = (v: string): bigint => {
+  const exp = /^(\d+)n?$/.exec(v);
+  if (!exp) {
+    throw new TransformTypeError(`Cannot convert ${v} to a BigInt`)
   }
-  | {
-    env?: T;
-    optionalPrefix?: string;
-    optionalSuffix?: string;
-  }
-
-interface EnvconfigGetConfigOptions<T extends Types, E extends boolean> {
-  required?: E;
-  type?: T;
+  const [, num] = exp;
+  return BigInt(num);
 }
 
-type R1<B extends Types> =
-  B extends 'string' ? string
-  : B extends 'number' ? number
-  : B extends 'bigint' ? bigint
-  : B extends 'boolean' ? boolean
-  : B extends (v: any) => infer R ? R
-  : never
 
-type R<T extends Types, E extends boolean> =
-  E extends true ? R1<T>
-  : E extends false ? R1<T> | undefined
-  : never
-
-type Options<T extends Types = 'string', E extends boolean = false> =
-  | [(EnvconfigGetConfigOptions<T, E>)?]
-  | [T?, E?]
-
-const toNumber = (v: any) => isNumberStr(v)
-  ? Number(v)
-  : undefined;
-
-const toBigint = (v: any) => isBigIntStr(v)
-  ? BigInt(v.slice(0, -1))
-  : undefined;
-
-const toBoolean = (v: string) => isBooleanStr(v) ? JSON.parse(v.toLowerCase()) as boolean : undefined;
-
-const transf = <T,>(type: Types<T>, v: string | undefined) => {
-  if (v === undefined) return undefined;
-  else if (typeof type === 'function') return type(v);
-  else if (type === 'string') return v;
-  else if (type === 'number') return toNumber(v);
-  else if (type === 'bigint') return toBigint(v);
-  else if (type === 'boolean') return toBoolean(v)
+export const types = {
+  string: (v: string): string => v,
+  number: NumberTransformType,
+  boolean: BooleanTransformType,
+  bigint: BigIntTransformType,
 }
 
-const isTypes = <T extends Types>(v: any): v is T => {
-  switch (v) {
-    case 'string':
-    case 'number':
-    case 'boolean':
-      return true
-  }
-  if (typeof v === 'function') return true;
-  return false
+
+
+type EnvconfigOptions = {
+  env?: Record<string | number | symbol, string | undefined>;
+  prefix?: string;
+  suffix?: string;
+  optionalPrefix?: string;
+  optionalSuffix?: string;
 }
 
-const isConfigBool = <E extends boolean>(v: any): v is E => typeof v === 'boolean';
-const isConfigObj = <T extends Types, E extends boolean>(v: any): v is EnvconfigGetConfigOptions<T, E> => typeof v === 'object';
-
-const parseOptions = <T extends Types = 'string', E extends boolean = false>(...opts: Options<T, E>) => {
-  type A = EnvconfigGetConfigOptions<T, E>
-
-  const resolveOpt = (a: EnvconfigGetConfigOptions<T, E>, v: T | E | A | undefined) => {
-    if (isConfigBool<E>(v)) {
-      a.required = v
-    }
-    if (isTypes<T>(v)) {
-      a.type = v
-    }
-    if (isConfigObj<T, E>(v)) {
-      return v
-    }
-    return a
+const globalThisProcessEnv = () => {
+  const g: any = globalThis;
+  // Load process.env from globalThis
+  if (isRecord(g) && isRecord(g.process) && isRecord(g.process.env)) return g.process.env as Record<string, string | undefined>;
+  // Load Deno.env from globalThis
+  if (isRecord(g) && isRecord(g.Deno) && isRecord(g.Deno.env) && isFunction(g.Deno.env.toObject)) {
+    const res = g.Deno.env.toObject();
+    if (isRecord(res)) return res as Record<string, string | undefined>;
   }
-
-  let out: A = {}
-
-  for (const opt of opts) {
-    out = resolveOpt(out, opt)
-  }
-
-  return out;
+  return {}
 }
 
-const globalThisProcessEnv = (v?: Record<string, any>) => v?.process?.env
+type GetConfigArgs<T, R extends boolean> = [args1?: TransformType<T> | { type?: TransformType<T>, required?: R }, args2?: R | { required: R }]
+type ResultGetConfig<T, R extends boolean> = R extends true ? T : T | undefined
 
-export class Envconfig<P extends { [k: string]: string | undefined } = any> {
-  constructor(private options?: EnvconfigOptions<P>) {
-    this.env = this.options?.env ?? globalThisProcessEnv(globalThis)
+const aliasType: [any, TransformTypeFn<unknown>][] = [
+  ['string', types.string],
+  [String, types.string],
+  ['number', types.number],
+  [Number, types.number],
+  ['boolean', types.boolean],
+  [Boolean, types.boolean],
+  ['bigint', types.bigint],
+  [BigInt, types.bigint],
+];
+
+const resolveTransformType = (tt: TransformType<unknown>): TransformTypeFn<unknown> => {
+  if (isString(tt)) {
+    const aliasTypeFound = aliasType.find(([k]) => k === tt);
+    if (!aliasTypeFound) throw new Error(`Unknown transform type: ${tt}`);
+    const [, t] = aliasTypeFound;
+    return t;
+  }
+  return tt;
+}
+
+export class Envconfig {
+  readonly env: Record<string | number | symbol, string | undefined>;
+
+  constructor(private options?: EnvconfigOptions) {
+    this.env = this.options?.env ?? globalThisProcessEnv()
   }
 
-  readonly env: Record<string, string | undefined>;
+  *findValue(envPath: string): Generator<[string, string | undefined]> {
+    const { optionalPrefix, optionalSuffix, prefix, suffix } = this.options ?? {}
 
-  findValue(envPath: string) {
-    const { optionalPrefix, optionalSufix, prefix, sufix } = this.options as any ?? {}
+    const principalKey = `${prefix ?? ''}${envPath}${suffix ?? ''}`;
+    let keys: string[] = [principalKey];
 
-    const v = this.env;
-
-    const isExacPrefixOrSufix = notIsUndefined(prefix) || notIsUndefined(sufix)
-    const isExacPrefixAndSufix = notIsUndefined(prefix) && notIsUndefined(sufix)
-    const isOptionalPrefixOrSufix = notIsUndefined(optionalPrefix) || notIsUndefined(optionalSufix)
-
-    const r =
-      isExacPrefixOrSufix
-        ? isExacPrefixAndSufix ? v[`${prefix}${envPath}${sufix}`] : notIsUndefined(prefix) ? v[`${prefix}${envPath}`] : notIsUndefined(sufix) ? v[`${envPath}${sufix}`] : v[envPath]
-        : isOptionalPrefixOrSufix
-          ? (notIsUndefined(optionalPrefix) && notIsUndefined(optionalSufix) ? v[`${optionalPrefix}${envPath}${optionalSufix}`] : undefined)
-          ?? (notIsUndefined(optionalPrefix) ? v[`${optionalPrefix}${envPath}`] : undefined)
-          ?? (notIsUndefined(optionalSufix) ? v[`${envPath}${optionalSufix}`] : undefined)
-          ?? v[envPath]
-          : v[envPath]
-
-    return r;
-  }
-
-  getConfig<T extends Types = 'string', E extends boolean = false>(envPath: string, ...args: Options<T, E>): R<T, E> {
-    const options = parseOptions(...args);
-
-    const required = options?.required ?? false;
-    const type = options?.type ?? 'string';
-
-    const valueFound = this.findValue(envPath);
-    const v = transf(type, valueFound);
-
-    if (required && v === undefined) {
-      throw new Error(`Cannot found config ${envPath}`);
+    if (!prefix && optionalPrefix) {
+      keys = [`${optionalPrefix}${principalKey}`, ...keys];
     }
 
-    return v;
+    if (!suffix && optionalSuffix) {
+      keys = [`${principalKey}${optionalSuffix}`, ...keys];
+    }
+
+    if (!prefix && optionalPrefix && !suffix && optionalSuffix) {
+      keys = [`${optionalPrefix}${principalKey}${optionalSuffix}`, ...keys];
+    }
+
+    for (const key of keys) {
+      yield [key, this.env[key]];
+    }
+  }
+
+  getConfig<R extends boolean = false>(configPath: string, ...args: GetConfigArgs<'string', R>): ResultGetConfig<string, R>
+  getConfig<R extends boolean = false>(configPath: string, ...args: GetConfigArgs<'bigint', R>): ResultGetConfig<bigint, R>
+  getConfig<R extends boolean = false>(configPath: string, ...args: GetConfigArgs<'number', R>): ResultGetConfig<number, R>
+  getConfig<R extends boolean = false>(configPath: string, ...args: GetConfigArgs<'boolean', R>): ResultGetConfig<boolean, R>
+  getConfig<T, R extends boolean = false>(configPath: string, ...args: GetConfigArgs<T, R>): ResultGetConfig<T, R>
+  getConfig<R extends boolean = false>(configPath: string, ...args: GetConfigArgs<unknown, R>): ResultGetConfig<unknown, R> {
+    const [arg1, arg2] = args;
+    let required: boolean = false;
+    let transformType: TransformType<any> = function defaultTransformType(v: any) { return v };
+
+    if (isFunction(arg1)) {
+      transformType = resolveTransformType(arg1);
+      if (isRecord(arg2)) {
+        required = arg2.required;
+      }
+      if (isBoolean(arg2)) {
+        required = arg2;
+      }
+    } else if (isRecord(arg1)) {
+      if (arg1.type !== undefined) {
+        transformType = resolveTransformType(arg1.type);
+      }
+      if (isBoolean(arg1.required)) {
+        required = arg1.required;
+      } else if (isBoolean(arg2)) {
+        required = arg2;
+      } else if (isRecord(arg2)) {
+        required = arg2.required;
+      }
+    }
+
+    for (const [_key, value] of this.findValue(configPath)) {
+      if (value !== undefined) {
+        try {
+          return transformType(value);
+        } catch (ex) {
+          if (ex instanceof TransformTypeError) {
+            Error.captureStackTrace(ex, Envconfig.prototype.getConfig);
+            throw ex;
+          }
+          throw ex;
+        }
+      }
+    }
+
+    if (required) {
+      throw new Error(`Cannot found config ${configPath}`)
+    }
+
+    return undefined as any;
   }
 }
 
-export const envconfig = <T extends { [k: string]: string } = any>(options?: EnvconfigOptions<T>) => {
-  const e = new Envconfig<T>(options);
+export const envconfig = (options?: EnvconfigOptions) => {
+  const e = new Envconfig(options);
   return e.getConfig.bind(e);
 }
 
