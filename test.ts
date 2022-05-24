@@ -175,7 +175,7 @@ test('Envconfig', async (t) => {
     assert.equal(e('C'), undefined)
   })
 
-  await test('options sufix', () => {
+  await test('options suffix', () => {
     const env = { A_B: 'A_B', C: 'C' }
 
     const e = envconfig({ env: env, suffix: "_B" });
@@ -184,7 +184,7 @@ test('Envconfig', async (t) => {
     assert.equal(e('C'), undefined)
   })
 
-  await test('options prefix and sufix', () => {
+  await test('options prefix and suffix', () => {
     const env = { A_C_B: 'A_C_B', E: 'E', F_B: 'F_B' }
 
     const e = envconfig({ env: env, prefix: "A_", suffix: '_B' });
@@ -203,7 +203,7 @@ test('Envconfig', async (t) => {
     assert.equal(e('C'), 'C')
   })
 
-  await test('options optional sufix', () => {
+  await test('options optional suffix', () => {
     const env = { A_B: 'A_B', C: 'C' }
 
     const e = envconfig({ env: env, optionalSuffix: "_B" });
@@ -212,7 +212,7 @@ test('Envconfig', async (t) => {
     assert.equal(e('C'), 'C')
   })
 
-  await test('options optional prefix and sufix', () => {
+  await test('options optional prefix and suffix', () => {
     const env = { A_B_C: 'A_B_C', D: 'D', A_E: 'A_E', F_C: 'F_C' }
 
     const e = envconfig({ env: env, optionalPrefix: 'A_', optionalSuffix: "_C" });
@@ -223,7 +223,7 @@ test('Envconfig', async (t) => {
     assert.equal(e('F'), 'F_C')
   })
 
-  await test('conflix prefix and optionalprefix', () => {
+  await test('conflict prefix and optionalPrefix', () => {
     const env = { A_B: 'A_B', C: 'C' }
 
     // @ts-ignore
@@ -233,7 +233,7 @@ test('Envconfig', async (t) => {
     assert.equal(e('C'), undefined)
   })
 
-  await test('conflix sufix and optionalsufix', () => {
+  await test('conflict suffix and optionalSuffix', () => {
     const env = { A_B: 'A_B', C: 'C' }
 
     const e = envconfig({ env, suffix: '_B', optionalSuffix: '_B' })
