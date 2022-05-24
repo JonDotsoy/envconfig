@@ -1,11 +1,9 @@
-import { inspect } from "util"
-
 const isRecord = (v: unknown): v is Record<string | symbol | number, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isFunction = (v: unknown): v is ((...args: unknown[]) => unknown) => typeof v === 'function'
 const isConstructor = (v: unknown): v is new (...args: unknown[]) => unknown => isFunction(v) && isRecord(v.prototype) && v.prototype.constructor === v
-const isString = (v: unknown): v is string => typeof v === 'string'
+// const isString = (v: unknown): v is string => typeof v === 'string'
 const isBoolean = (v: unknown): v is boolean => typeof v === 'boolean'
-const withProp = <T extends string | symbol | number,>(value: Record<string | symbol | number, unknown>, key: T): value is Record<T, unknown> => key in value
+// const withProp = <T extends string | symbol | number,>(value: Record<string | symbol | number, unknown>, key: T): value is Record<T, unknown> => key in value
 
 
 export class TransformTypeError extends SyntaxError { }
@@ -21,7 +19,7 @@ type TypesList = | 'string' |
 
 
 export type TransformTypeFunction<T,> = (v: string) => T;
-export type TransformTypeConstructor<T,> = { new(...args: any): T }
+export type TransformTypeConstructor<T,> = new (...args: any) => T
 export type TransformType<T,> = string | TransformTypeConstructor<T> | TransformTypeFunction<T>;
 
 const NumberTransformType = (v: string): number => parseFloat(v)
@@ -91,7 +89,7 @@ const resolveTransformType = (tt: TransformType<unknown>): TransformTypeFunction
     return (v: string) => new tt(v)
   }
   if (!isFunction(tt)) {
-    throw new TransformTypeError(`Invalid type ${inspect(tt)}`)
+    throw new TransformTypeError(`Invalid type ${tt.toString()}`)
   }
   return tt;
 }
